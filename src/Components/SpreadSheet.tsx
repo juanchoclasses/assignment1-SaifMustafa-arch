@@ -100,6 +100,14 @@ function SpreadSheet({ documentName }: SpreadSheetProps) {
 
       case ButtonNames.allClear:
         spreadSheetClient.clearFormula();
+
+        // temp  fix implemented as above instructor code is broken
+        for (let index = 0; index < 20; index++) {
+          if(spreadSheetClient.getFormulaString().length >= 1){
+            // alert("len greater than 1 : " + spreadSheetClient.getFormulaString())
+            spreadSheetClient.removeToken();
+          }
+        }
         break;
 
     }

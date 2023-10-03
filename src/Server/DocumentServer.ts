@@ -180,7 +180,7 @@ app.put('/document/cell/view/:name/:cell', (req: express.Request, res: express.R
 
 app.put('/document/addtoken/:name/:token', (req: express.Request, res: express.Response) => {
     const name = req.params.name;
-    const token = req.params.token;
+    let token = req.params.token;
     // is this name valid?
     const documentNames = documentHolder.getDocumentNames();
     if (documentNames.indexOf(name) === -1) {
@@ -194,6 +194,7 @@ app.put('/document/addtoken/:name/:token', (req: express.Request, res: express.R
         return;
     }
     // add the
+    if(token === "period"){token = "."};
     const resultJSON = documentHolder.addToken(name, token, userName);
 
 

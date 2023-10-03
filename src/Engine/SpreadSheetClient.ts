@@ -231,6 +231,9 @@ class SpreadSheetClient {
         if (token === "/") {
             token = "%2F";
         }
+
+        if(token === "."){token = "period"};
+
         const requestAddTokenURL = `${this._baseURL}/document/addtoken/${this._documentName}/${token}`;
         fetch(requestAddTokenURL, {
             method: 'PUT',

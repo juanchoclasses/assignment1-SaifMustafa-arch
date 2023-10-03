@@ -20,72 +20,90 @@ export class FormulaEvaluator {
   }
 
   evaluate(formula: FormulaType) {
-    //Temporary console log // console.log('FormulaEvaluator line 21 of FormulaEvaluator:', formula);
-
     this._result = formula.length;
-    //Temporary console log // console.log("FormulaEvaluator line 27 this._result = formula.length - result: " + this._result);
-
-    //Temporary console log // console.log("FormulaEvaluator line 27 this._result = formula.length - result: " + this._result);
     this._errorMessage = "";
 
-    if (true){// test for errors
+    
 
     if (formula.length === 0) {
       this._errorMessage = ErrorMessages.emptyFormula;
       return;
     }
+    try {
 
-    if (false) {
-      //TODO
-      this._errorMessage = ErrorMessages.partial;
-      return;
-    }
-    if (false) {
-      //TODO
-      this._errorMessage = ErrorMessages.divideByZero;
-      return;
-    }
-    if (false) {
-      //TODO
-      this._errorMessage = ErrorMessages.invalidCell;
-      return;
-    }
-    if (false) {
-      //TODO
-      this._errorMessage = ErrorMessages.invalidFormula;
-      return;
-    }
-    if (false) {
-      //TODO
-      this._errorMessage = ErrorMessages.invalidNumber;
-      return;
-    }
-    if (false) {
-      //TODO
-      this._errorMessage = ErrorMessages.invalidOperator;
-      return;
-    }
-    if (false) {
-      //TODO
-      this._errorMessage = ErrorMessages.missingParentheses;
-      return;
-    }
-    }
-    
-  
-      try {
+      // Initial basic error checking
+      let openCount = 0; // use to count pairs of parenthesis 
+      let closeCount = 0;
+      let regex = /^[A-Z][1-9][0-9]?$/;
+      
+      // loop through formula
+      for (let index = 0; index < formula.length; index++) {
+          let currentElement = formula[index];
+          let prevElement = index > 0 ? formula[index - 1] : undefined;
+          let nextElement = index < formula.length - 1 ? formula[index + 1] : undefined;
+      
+          // Counting parentheses
+          if (currentElement === '(') {
+            // Logic for opening brackets errors
+              openCount++;
+      
+              // Check preceding element if it exists to ensure validity
+              if (prevElement && !['+', '-', '*', '/'].includes(prevElement)) {
+                  this._errorMessage = ErrorMessages.invalidFormula;
+                  break;
+              }
+              // Check following element to ensure validity
+              if (nextElement && !(regex.test(nextElement) || !isNaN(nextElement))) {
+                  this._errorMessage = ErrorMessages.invalidFormula;
+                  break;
+              }
+          } else if (currentElement === ')') {
+            // logic for closing parenthesis 
+              closeCount++;
+      
+              // Check preceding element to ensure validity
+              if (prevElement && !(regex.test(prevElement) || !isNaN(prevElement))) {
+                  this._errorMessage = ErrorMessages.invalidFormula;
+                  break;
+              }
+              // Check following element to ensure validity
+              if (nextElement && !['+', '-', '*', '/', ')'].includes(nextElement)) {
+                  this._errorMessage = ErrorMessages.invalidFormula;
+                  break;
+              }
+          }
+      
+          // Check for pattern validity to make sure we have operators between values
+          if (regex.test(currentElement) && nextElement) {
+              if (!['+', '-', '*', '/', '(', ')'].includes(nextElement)) {
+                  this._errorMessage = ErrorMessages.invalidFormula;
+                  break;
+              }
+          }
+      }
+      // throw error is unpaired parenthesis, mismatched ones are caught later
+      if (openCount !== closeCount) {
+          this._errorMessage = ErrorMessages.missingParentheses;
+      }
+      
+
+
       // Start parsing from the beginning of the formula
       this._position = 0;
       this._result = this.expression(formula);
+
     } catch (error: any) {
-    this._errorMessage = error?.message || "An unexpected error occurred";
-}
+      this._errorMessage = error?.message || "An unexpected error occurred";
+    }
 
   }
 
-
+  // Method that handles + and -
+  // Calls term to handle  * and  / 
   expression(formula: FormulaType): number {
+    // console.log(formula);
     let value = this.term(formula);
+
     while (this._position < formula.length && ['+', '-'].includes(formula[this._position])) {
       let operator = formula[this._position++];
       let nextTerm = this.term(formula);
@@ -95,8 +113,19 @@ export class FormulaEvaluator {
     return value;
   }
 
+  // method that handles * and / 
+  // calls factor to handle brackets
   term(formula: FormulaType) {
+    // console.log("initial: " + formula[this._position]);
     let value = this.factor(formula);
+    // console.log("secondary: " + formula[this._position]);
+
+    //Error check - did we miss a operator - cell
+    if(Cell.isValidCellLabel(formula[this._position])){
+      this._errorMessage = ErrorMessages.invalidFormula;
+      return 0;
+    }
+
     while (this._position < formula.length && ['*', '/'].includes(formula[this._position])) {
       let operator = formula[this._position++];
       let nextFactor = this.factor(formula);
@@ -104,28 +133,58 @@ export class FormulaEvaluator {
         value *= nextFactor;
       } else {
         if (nextFactor === 0) {
-          throw new Error("Division by zero is not allowed!");
+          // throw new Error( ErrorMessages.divideByZero);
+          this._errorMessage = ErrorMessages.divideByZero;
+          value = Infinity;
+        } else {
+          value /= nextFactor;
         }
-        value /= nextFactor;
       }
-      
+
     }
     return value;
   }
 
+  // lowest level and first to occur. Handles brackets
   factor(formula: FormulaType) {
+    
     let token = formula[this._position++];
-
+    // console.log("formula: " , formula);
+    // console.log("token: " + token);
+    
     if (this.isNumber(token)) {
       return Number(token);
     } else if (this.isCellReference(token)) {
-      return this.getCellValue(token)[0]; // handle errors
+      // if a cell reference return value unless error
+      let [value, error] = this.getCellValue(token);
+      if (error) { // pass up error
+        this._errorMessage = error;
+        return 0;
+      }
+      return value;
     } else if (token === '(') {
       let value = this.expression(formula);
-      if (formula[this._position++] !== ')') throw new Error("Missing closing parenthesis");
+      if (formula[this._position++] !== ')') {
+        this._errorMessage = ErrorMessages.missingParentheses;
+        return 0;
+      }
       return value;
     } else {
-      throw new Error("Unexpected token in factor: " + token);
+      // check if not an operator - e.g. cell reference
+      if (!['+', '-', '*', '/'].includes(token)) {
+        // console.log('Invalid token' + token);
+        this._errorMessage = ErrorMessages.invalidFormula;
+        return 0;
+      } else {
+        // following have the same error code so this 
+        // Handles invalidNumber
+        // Handles invalidFormula
+        // Handles invalidOperator
+        // - if not caught before in earlier checks
+        
+        this._errorMessage = ErrorMessages.invalidFormula;
+        return 0;
+      }
     }
   }
 
