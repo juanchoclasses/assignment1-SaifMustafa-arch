@@ -14,6 +14,12 @@ GitHub Handle: SaifMustafa-arch
 
     - Github Copilot
     - ChatGPT
+    - [1]	“Recursive descent parser,” Wikipedia. Aug. 14, 2022. Available: https://en.wikipedia.org/w/index.php?title=Recursive_descent_parser&oldid=1104290163. [Accessed: Oct. 02, 2023]
+    - [2]	“Recursive Descent Parser - Javatpoint.” Available: https://www.javatpoint.com/recursive-descent-parser. [Accessed: Oct. 02, 2023]
+    - [3]	“Recursive Descent Parser,” GeeksforGeeks, Apr. 02, 2019. Available: https://www.geeksforgeeks.org/recursive-descent-parser/. [Accessed: Oct. 02, 2023]
+
+<br />
+
 
 - (Optional) What was the most interesting part of the assignment? How would you improve this 
     - Most Interesting
