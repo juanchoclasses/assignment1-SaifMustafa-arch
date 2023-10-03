@@ -8,7 +8,7 @@ GitHub Handle: SaifMustafa-arch
 
 - How many hours did it take you to complete this assignment? 20
 
-- Did you collaborate or share ideas with any other students/TAs/Professors? Yes, Group members.  Jieyu Bu (Jerry086) AND Zhongyu Wei (codeeverydayyu)
+- Did you collaborate or share ideas with any other students/TAs/Professors? Yes, Group members.  Jieyu Bu (codeeverydayyu) AND Zhongyu Wei (Jerry086)
 
 - Did you use any external resources?
 
