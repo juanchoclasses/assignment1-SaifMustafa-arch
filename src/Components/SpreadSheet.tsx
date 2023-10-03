@@ -116,6 +116,7 @@ function SpreadSheet({ documentName }: SpreadSheetProps) {
    * 
    * */
   function onButtonClick(event: React.MouseEvent<HTMLButtonElement>): void {
+    if(showLoginWarning()){
 
     const text = event.currentTarget.textContent;
     let trueText = text ? text : "";
@@ -125,6 +126,7 @@ function SpreadSheet({ documentName }: SpreadSheetProps) {
     updateDisplayValues();
 
   }
+}
 
 
   /**
@@ -136,6 +138,7 @@ function SpreadSheet({ documentName }: SpreadSheetProps) {
    * If the edit status is false then it will ask the machine to update the current formula.
    */
   function onCellClick(event: React.MouseEvent<HTMLButtonElement>): void {
+    if(showLoginWarning()){
 
     const cellLabel = event.currentTarget.getAttribute("cell-label");
     // calculate the current row and column of the clicked on cell
@@ -157,6 +160,16 @@ function SpreadSheet({ documentName }: SpreadSheetProps) {
     }
 
   }
+}
+
+  function showLoginWarning(){
+    if ( !spreadSheetClient.userName){
+        alert("Please enter a username before interacting!");
+        return false;
+      }
+      return true;
+    };
+
 
   return (
     <div>

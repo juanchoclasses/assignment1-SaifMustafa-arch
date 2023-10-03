@@ -12,75 +12,124 @@ export class FormulaEvaluator {
   private _lastResult: number = 0;
   private _sheetMemory: SheetMemory;
   private _result: number = 0;
-
+  private _position = 0;
 
   constructor(memory: SheetMemory) {
     this._sheetMemory = memory;
+    this._position = 0;
   }
-
-  /**
-    * place holder for the evaluator.   I am not sure what the type of the formula is yet 
-    * I do know that there will be a list of tokens so i will return the length of the array
-    * 
-    * I also need to test the error display in the front end so i will set the error message to
-    * the error messages found In GlobalDefinitions.ts
-    * 
-    * according to this formula.
-    * 
-    7 tokens partial: "#ERR",
-    8 tokens divideByZero: "#DIV/0!",
-    9 tokens invalidCell: "#REF!",
-  10 tokens invalidFormula: "#ERR",
-  11 tokens invalidNumber: "#ERR",
-  12 tokens invalidOperator: "#ERR",
-  13 missingParentheses: "#ERR",
-  0 tokens emptyFormula: "#EMPTY!",
-
-                    When i get back from my quest to save the world from the evil thing i will fix.
-                      (if you are in a hurry you can fix it yourself)
-                               Sincerely 
-                               Bilbo
-    * 
-   */
 
   evaluate(formula: FormulaType) {
-
-
-    // set the this._result to the length of the formula
+    //Temporary console log // console.log('FormulaEvaluator line 21 of FormulaEvaluator:', formula);
 
     this._result = formula.length;
+    //Temporary console log // console.log("FormulaEvaluator line 27 this._result = formula.length - result: " + this._result);
+
+    //Temporary console log // console.log("FormulaEvaluator line 27 this._result = formula.length - result: " + this._result);
     this._errorMessage = "";
 
-    switch (formula.length) {
-      case 0:
-        this._errorMessage = ErrorMessages.emptyFormula;
-        break;
-      case 7:
-        this._errorMessage = ErrorMessages.partial;
-        break;
-      case 8:
-        this._errorMessage = ErrorMessages.divideByZero;
-        break;
-      case 9:
-        this._errorMessage = ErrorMessages.invalidCell;
-        break;
-      case 10:
-        this._errorMessage = ErrorMessages.invalidFormula;
-        break;
-      case 11:
-        this._errorMessage = ErrorMessages.invalidNumber;
-        break;
-      case 12:
-        this._errorMessage = ErrorMessages.invalidOperator;
-        break;
-      case 13:
-        this._errorMessage = ErrorMessages.missingParentheses;
-        break;
-      default:
-        this._errorMessage = "";
-        break;
+    if (true){// test for errors
+
+    if (formula.length === 0) {
+      this._errorMessage = ErrorMessages.emptyFormula;
+      return;
+    }
+
+    if (false) {
+      //TODO
+      this._errorMessage = ErrorMessages.partial;
+      return;
+    }
+    if (false) {
+      //TODO
+      this._errorMessage = ErrorMessages.divideByZero;
+      return;
+    }
+    if (false) {
+      //TODO
+      this._errorMessage = ErrorMessages.invalidCell;
+      return;
+    }
+    if (false) {
+      //TODO
+      this._errorMessage = ErrorMessages.invalidFormula;
+      return;
+    }
+    if (false) {
+      //TODO
+      this._errorMessage = ErrorMessages.invalidNumber;
+      return;
+    }
+    if (false) {
+      //TODO
+      this._errorMessage = ErrorMessages.invalidOperator;
+      return;
+    }
+    if (false) {
+      //TODO
+      this._errorMessage = ErrorMessages.missingParentheses;
+      return;
+    }
+    }
+    
+  
+      try {
+      // Start parsing from the beginning of the formula
+      this._position = 0;
+      this._result = this.expression(formula);
+    } catch (error: any) {
+    this._errorMessage = error?.message || "An unexpected error occurred";
+}
+
+  }
+
+
+  expression(formula: FormulaType): number {
+    let value = this.term(formula);
+    while (this._position < formula.length && ['+', '-'].includes(formula[this._position])) {
+      let operator = formula[this._position++];
+      let nextTerm = this.term(formula);
+      if (operator === '+') value += nextTerm;
+      else value -= nextTerm;
+    }
+    return value;
+  }
+
+  term(formula: FormulaType) {
+    let value = this.factor(formula);
+    while (this._position < formula.length && ['*', '/'].includes(formula[this._position])) {
+      let operator = formula[this._position++];
+      let nextFactor = this.factor(formula);
+      if (operator === '*') {
+        value *= nextFactor;
+      } else {
+        if (nextFactor === 0) {
+          throw new Error("Division by zero is not allowed!");
+        }
+        value /= nextFactor;
+      }
+      
+    }
+    return value;
+  }
+
+  factor(formula: FormulaType) {
+    let token = formula[this._position++];
+
+    if (this.isNumber(token)) {
+      return Number(token);
+    } else if (this.isCellReference(token)) {
+      return this.getCellValue(token)[0]; // handle errors
+    } else if (token === '(') {
+      let value = this.expression(formula);
+      if (formula[this._position++] !== ')') throw new Error("Missing closing parenthesis");
+      return value;
+    } else {
+      throw new Error("Unexpected token in factor: " + token);
     }
   }
+
+
 
   public get error(): string {
     return this._errorMessage
@@ -89,8 +138,6 @@ export class FormulaEvaluator {
   public get result(): number {
     return this._result;
   }
-
-
 
 
   /**
